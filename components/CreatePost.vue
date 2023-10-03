@@ -10,16 +10,17 @@
             <div id="Post" class="z-40 bottom-0 max-h-[calc(100vh-200px)] w-full px-3 max-w-[500px] mx-auto">
                 <div class="py-2 w-full">
                     <div class="flex items-center">
-                        <div class="flex items-center text-white">
-                            <img src="https://picsum.photos/id/223/50" class="rounded-full h-[35px] " alt="">
-                            <h1 class="ml-2 font-semibold text-[18px]"> Mosh Code</h1>
+                        <div v-if="user" class="flex items-center text-white">
+                            <img :src="user.identities[0].identity_data.avatar_url" class="rounded-full h-[35px] " alt="">
+                            <h1 class="ml-2 font-semibold text-[18px]"> {{ user.identities[0].identity_data.user_name }}
+                            </h1>
                         </div>
                     </div>
                     <div class="relative flex items-center w-full">
                         <div class="w-[24px] mx-auto">
                             <div class="absolute ml-4 mt-1 top-0 w-[1px] bg-gray-700 h-full" />
                         </div>
-                        <div class="bg-black rounded-lg w-[calc(100%-50px)] text w-full font-light">
+                        <div class="bg-black rounded-lg w-[calc(100%-50px)] text  font-light">
                             <div class="pl-2 text-gray-300 bg-black w-full">
                                 <textarea v-model="text" style="resize: none;" placeholder="start a thread" id="textarea"
                                     @input="adjustTextareaHeight()" class="w-full bg-black outline-none"></textarea>
@@ -41,7 +42,7 @@
                 </div>
             </div>
             <button class="fixed bottom-0 font-bold text-lg w-full p-2 bg-black inline-block border-t border-t-gray-700"
-                v-if="text" :disabled="isLoading" :class="isLoading ? 'text-gray-600' : 'text-blue-600'">
+                v-if="text" :disabled="isLoading" :class="isLoading ? 'text-gray-600' : 'text-blue-600'" @click="addPost()">
                 <p v-if="!isLoading">Post</p>
                 <p v-else class="flex items-center gap-2 justify-center">
                     <Icon name="eos-icons:bubble-loading" size="25" />Please wait...
@@ -52,9 +53,11 @@
 </template>
 
 <script setup >
-import { v4 as uuid } from "uuid"
+import { v4 as uuidv4 } from "uuid"
 import { useUserStore } from '~/stores/user';
 const userStore = useUserStore()
+const user = useSupabaseUser()
+const client = useSupabaseClient()
 let text = ref(null)
 
 let file = ref(null)
@@ -79,6 +82,55 @@ const clearData = () => {
 const onChange = () => {
     fileDisplay.value = URL.createObjectURL(file.value.files[0])
     fileData.value = file.value.files[0]
+}
+
+const addPost = async () => {
+    let dataOut = null
+    let errorOut = null
+    isLoading.value = true
+
+    if (fileData.value) {
+        const { data, error } = await client.storage.from('thread-clone-files').upload(`${uuidv4()}.jpg`, fileData.value)
+        dataOut = data
+        errorOut = error
+    }
+
+    if (errorOut) {
+        console.log("error from file data", errorOut);
+        return errorOut
+    }
+
+    let pic = ''
+
+    if (dataOut) {
+        pic = dataOut.path ? dataOut.path : ''
+    }
+
+
+    try {
+        let data = {
+            userId: user.value.identities[0].user_id,
+            name: user.value.identities[0].identity_data.user_name,
+            image: user.value.identities[0].identity_data.avatar_url,
+            text: text.value,
+            picture: pic,
+        }
+
+        await useFetch("/api/create-post", {
+            method: "POST",
+            body: data
+        })
+
+        await userStore.getAllPosts()
+        userStore.isMenuOverlay = false
+        clearData()
+        isLoading.value = false
+    } catch (error) {
+        console.log("error from creat", error);
+        isLoading.value = false
+    }
+
+
 }
 </script>
 

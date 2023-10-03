@@ -8,7 +8,9 @@
                 </div>
 
 
-                <div @click="isMenu = !isMenu" class="relative ">
+
+                <div v-if="user && user.identities && user.identities[0].user_id === post.userId" @click="isMenu = !isMenu"
+                    class="relative">
                     <button :disabled="isDeleting"
                         class="flex items-center text-white p-1 h-[24px] hover:bg-gray-800 rounded-full cursor-pointer w-[24px]"
                         :class="isMenu ? 'bg-gray-800' : ''">
@@ -16,7 +18,7 @@
                         <Icon v-else name="eos-icons:bubble-loading" color="#ffffff" size="18" />
                     </button>
                     <div v-if="isMenu" class="absolute border border-gray-600 right-0 z-20 mt-1 rounded">
-                        <button
+                        <button @click="deletePost(post.id, post.picture)"
                             class="flex items-center rounded gap-2 text-red-500 justify-between bg-black w-full pl-4 pr-3 py-1 hover:bg-gray-800">
                             <div>Delete</div>
                             <Icon name="solar:trash-bin-trash-broken" size="20" />
@@ -30,7 +32,8 @@
                 </div>
                 <div class="bg-black rounded-lg w-[calc(100%-50px)] text-sm font-light">
                     <div class="py-2 text-gray-300">{{ post.text }}</div>
-                    <img v-if="post && post.picture" class="mx-auto w-full rounded mt-2 pr-2" :src="post.picture" />
+                    <img v-if="post && post.picture" class="mx-auto w-full rounded mt-2 pr-2"
+                        :src="runtimeConfig.public.bucketUrl + post.picture" />
 
                     <div class="absolute mt-2 w-full ml-2">
                         <button :disabled="isLike" class="flex items-center gap-1">
@@ -38,7 +41,7 @@
                                 name="mdi:cards-heart-outline" size="28" />
                         </button>
                         <div class="relative text-sm text-gray-500">
-                            <div> <span>4</span>Likes</div>
+                            <div> <span>{{ post.likes.length }}</span>Likes</div>
                         </div>
                     </div>
                 </div>
@@ -57,7 +60,7 @@
                 </div>
             </div>
         </div>
-        <div class="h-[1px] bg-gray-800 w-full mt-3"/>
+        <div class="h-[1px] bg-gray-800 w-full mt-3" />
     </div>
 </template>
 
@@ -65,6 +68,8 @@
 import { useUserStore } from '~/stores/user';
 const useStore = useUserStore()
 let runtimeConfig = useRuntimeConfig()
+const user = useSupabaseUser()
+const client = useSupabaseClient()
 let isMenu = ref(false)
 let isLike = ref(false)
 let isDeleting = ref(false)
@@ -73,6 +78,42 @@ const emit = defineEmits(['isDeleted'])
 const props = defineProps({
     post: Object
 })
+
+const hasLikedComputed = computed(() => {
+    if (!user.value) return
+    let res = false
+
+    props.post.likes.forEach(like => {
+        if (like.userId == user.value.identities[0].user_id && like.postId == props.post.postId) {
+            return res = true
+        }
+    })
+
+    return res
+
+})
+
+const deletePost = async (id, picture) => {
+    let res = confirm("Are you sure you want to delete post")
+    if (!res) return
+
+    try {
+        isMenu.value = false
+        isDeleting.value = true
+
+        const { data, error } = await client.storage.from("thread-clone-files").remove([picture])
+
+        await useFetch(`/api/delete-post/${id}`, {
+            method: "DELETE"
+        })
+
+        emit('isDeleted', true)
+        await useStore.getAllPosts()
+    } catch (error) {
+        console.log(error);
+        isDeleting.value = false
+    }
+}
 </script>
 
 <style  scoped></style>
