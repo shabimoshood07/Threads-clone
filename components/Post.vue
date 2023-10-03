@@ -114,6 +114,37 @@ const deletePost = async (id, picture) => {
         isDeleting.value = false
     }
 }
+
+const likePost = async (id) => {
+    isLike.value = true
+    try {
+        await useFetch("/api/like-post", {
+            method: "POST",
+            body: {
+                userId: user.value.identities[0].user_id,
+                postId: id
+            }
+        })
+        await useStore.getAllPosts()
+        isLike.value = false
+    } catch (error) {
+        console.log(error);
+        isLike.value = false
+    }
+}
+const unlikePost = async (id) => {
+    isLike.value = true
+    try {
+        await useFetch(`/api/like-post/${id}`, {
+            method: "DELETE",
+        })
+        await useStore.getAllPosts()
+        isLike.value = false
+    } catch (error) {
+        console.log(error);
+        isLike.value = false
+    }
+}
 </script>
 
 <style  scoped></style>
