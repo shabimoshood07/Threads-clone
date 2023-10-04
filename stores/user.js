@@ -11,9 +11,6 @@ export const useUserStore = defineStore("user", {
       let res = await useFetch("/api/get-all-post");
       // this.posts = res.posts;
       this.posts = res.data._rawValue;
-
-      console.log("posts from store", res.posts);
-      console.log("posts from store", res.data._rawValue);
       return res.data;
     },
   },
