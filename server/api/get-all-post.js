@@ -6,5 +6,6 @@ export default defineEventHandler(async (event) => {
     orderBy: { id: "desc" },
     include: { likes: true },
   });
+  console.log("posts from api route", posts);
   return posts;
 });

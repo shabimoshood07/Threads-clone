@@ -96,6 +96,7 @@ const addPost = async () => {
     }
 
     if (errorOut) {
+        console.log("error from file data", errorOut);
         return errorOut
     }
 
@@ -125,6 +126,7 @@ const addPost = async () => {
         clearData()
         isLoading.value = false
     } catch (error) {
+        console.log("error from creat", error);
         isLoading.value = false
     }
 

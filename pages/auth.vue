@@ -34,6 +34,7 @@ const login = async (provider) => {
     const { data, error } = await client.auth.signInWithOAuth({
         provider,
     })
+    if (data) console.log(data);
     if (error) console.log(error);
 }
 
