@@ -5,7 +5,7 @@
                 <img src="/threads-logo.png" alt="threads-logo" class="w-[35px]" />
             </div>
         </div>
-        <div class="flex w-full max-w-[500px] mx-auto h-screen">
+        <div class="flex w-full max-w-[500px] mx-auto h-[calc(100vh-125px)]">
             <slot />
         </div>
         <div id="BottomNav" class="fixed z-50 bottom-0 flex w-full h-[70px] border-t border-t-gray-700 bg-black">

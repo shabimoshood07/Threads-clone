@@ -36,12 +36,20 @@
                         :src="runtimeConfig.public.bucketUrl + post.picture" />
 
                     <div class="absolute mt-2 w-full ml-2">
-                        <button :disabled="isLike" class="flex items-center gap-1">
-                            <Icon class="p-1 text-white hover:bg-gray-800 rounded-full cursor-pointer"
+                        <button :disabled="isLike" class="flex items-center gap-1" @click="likesfun()">
+                            <Icon v-if="!hasLikedComputed"
+                                class="p-1 text-white hover:bg-gray-800 rounded-full cursor-pointer"
                                 name="mdi:cards-heart-outline" size="28" />
+                            <Icon v-else class="p-1 text-red-500 hover:bg-gray-800 rounded-full cursor-pointer"
+                                name="mdi:cards-heart" size="28" />
                         </button>
                         <div class="relative text-sm text-gray-500">
-                            <div> <span>{{ post.likes.length }}</span>Likes</div>
+                            <div> <span v-if="!isLike">{{ post.likes.length }}</span>
+                                <span v-else>
+                                    <Icon size="13" color="#ffffff" name="eos-icons:bubble-loading" />
+                                </span>
+                                Likes
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -84,7 +92,7 @@ const hasLikedComputed = computed(() => {
     let res = false
 
     props.post.likes.forEach(like => {
-        if (like.userId == user.value.identities[0].user_id && like.postId == props.post.postId) {
+        if (like.userId == user.value.identities[0].user_id && like.postId == props.post.id) {
             return res = true
         }
     })
@@ -135,7 +143,7 @@ const likePost = async (id) => {
 const unlikePost = async (id) => {
     isLike.value = true
     try {
-        await useFetch(`/api/like-post/${id}`, {
+        await useFetch(`/api/unlike-post/${id}`, {
             method: "DELETE",
         })
         await useStore.getAllPosts()
@@ -144,6 +152,26 @@ const unlikePost = async (id) => {
         console.log(error);
         isLike.value = false
     }
+}
+
+const likesfun = async () => {
+    let likePostObj = null
+    if (props.post.likes.length < 1) {
+        likePost(props.post.id)
+        return null
+    } else {
+        props.post.likes.forEach(like => {
+            if (like.userId == user.value.identities[0].user_id && like.postId === props.post.id) {
+                likePostObj = like
+            }
+        })
+    }
+    if (likePostObj) {
+        unlikePost(likePostObj.id)
+        return null
+    }
+
+    likePost(props.post.id)
 }
 </script>
 
