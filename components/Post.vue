@@ -116,7 +116,7 @@ const deletePost = async (id, picture) => {
         })
 
         emit('isDeleted', true)
-        await useStore.getAllPosts()
+        // await useStore.getAllPosts()
     } catch (error) {
         console.log(error);
         isDeleting.value = false
