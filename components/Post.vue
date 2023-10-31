@@ -109,7 +109,7 @@ const deletePost = async (id, picture) => {
         isMenu.value = false
         isDeleting.value = true
 
-        const { data, error } = await client.storage.from("thread-clone-files").remove([picture])
+        const { data, error } = await client.storage.from("threads-clone").remove([picture])
 
         await useFetch(`/api/delete-post/${id}`, {
             method: "DELETE"
