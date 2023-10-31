@@ -90,7 +90,7 @@ const addPost = async () => {
     isLoading.value = true
 
     if (fileData.value) {
-        const { data, error } = await client.storage.from('thread-clone-files').upload(`${uuidv4()}.jpg`, fileData.value)
+        const { data, error } = await client.storage.from('threads-clone').upload(`${uuidv4()}.jpg`, fileData.value)
         dataOut = data
         errorOut = error
     }
